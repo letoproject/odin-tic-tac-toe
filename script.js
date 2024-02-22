@@ -12,27 +12,34 @@ function Gameboard() {
 
   const getBoard = () => board;
 
-  const makeTurn = (row, column, player) => {
-    console.log("board[row][column]", board[row][column].addToken(player));
-    const markedCell = board[row][column];
-    markedCell.addToken(player);
+  const setToken = (row, column, playerToken) => {
+    if (board[row][column].getToken() === " ") {
+      board[row][column].addToken(playerToken);
+      return true;
+    }
+    return false;
   };
 
-  const printBoard = () => {};
+  const printBoard = () => {
+    const boardWithCellValues = board.map((row) =>
+      row.map((cell) => cell.getToken())
+    );
+    console.log(boardWithCellValues);
+  };
 
-  return { getBoard, printBoard, makeTurn };
+  return { getBoard, printBoard, setToken };
 }
 
 function Cell() {
-  let value = 0;
+  let token = " ";
 
-  const addToken = (player) => {
-    value = player;
+  const addToken = (playerToken) => {
+    token = playerToken;
   };
 
-  const getValue = () => value;
+  const getToken = () => token;
 
-  return { addToken, getValue };
+  return { addToken, getToken };
 }
 
 function GameController(playerOne = "X", playerTwo = "O") {
@@ -64,7 +71,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
 
   const playRound = (row, column) => {
     console.log(`Player ${getActivePlayer().name} marked ${row} ${column}`);
-    board.makeTurn(row, column, getActivePlayer().token);
+    board.setToken(row, column, getActivePlayer().token);
     switchPlayerTurn();
     printNewRound();
   };
@@ -77,7 +84,9 @@ function GameController(playerOne = "X", playerTwo = "O") {
 const game = GameController();
 const board = Gameboard();
 
-game.playRound(0, 0);
-game.playRound(0, 1);
-
-console.log(board.getBoard());
+game.playRound(0, 0); // X
+game.playRound(0, 1); // O
+game.playRound(1, 1); // X
+game.playRound(1, 2); // O
+game.playRound(2, 2); // X
+game.playRound(2, 1); // O
