@@ -3,6 +3,8 @@ function Gameboard() {
   const columns = 3;
   const board = [];
 
+  const gui = screenController();
+
   const setBoard = () => {
     for (let i = 0; i < rows; i += 1) {
       board[i] = [];
@@ -19,6 +21,7 @@ function Gameboard() {
   const setToken = (row, column, playerToken) => {
     if (board[row][column].getToken() === " ") {
       board[row][column].addToken(playerToken);
+      gui.addTokenToCell(row, column, playerToken);
       return true;
     }
     return false;
@@ -46,6 +49,7 @@ function Cell() {
 
 function GameController(playerOne = "X", playerTwo = "O") {
   const board = Gameboard();
+  const gui = screenController();
 
   const players = [
     {
@@ -76,7 +80,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
     const columns = board.getBoard()[0].length;
 
     const rawBoard = board.printBoard();
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < rows; i += 1) {
       if (
         rawBoard[i][0] === rawBoard[i][1] &&
         rawBoard[i][1] === rawBoard[i][2] &&
@@ -121,7 +125,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
       board.setToken(row, column, getActivePlayer().token);
       let winner = winnerCheck();
       if (winner) {
-        console.log("winner", winner);
+        console.log("winner", `player ${winner}`);
         console.log(board.printBoard());
         restartGame();
       } else {
@@ -138,14 +142,51 @@ function GameController(playerOne = "X", playerTwo = "O") {
     activePlayer = players[0];
   };
 
+  gui.renderGameBoard();
+
   return { playRound, getActivePlayer, winnerCheck, restartGame };
 }
 
-const game = GameController();
-const board = Gameboard();
+function screenController() {
+  const gameBoard = document.querySelector(".gameBoard");
 
-game.playRound(0, 0); // X
-game.playRound(0, 1); // O
-game.playRound(1, 1); // X
-game.playRound(1, 2); // O
-game.playRound(2, 2); // X
+  const renderGameBoard = () => {
+    const board = Gameboard();
+    const rows = board.getBoard().length;
+    const columns = board.getBoard()[0].length;
+
+    for (let i = 0; i < rows; i += 1) {
+      for (let j = 0; j < columns; j += 1) {
+        let cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.textContent = " ";
+        cell.setAttribute("row", i);
+        cell.setAttribute("column", j);
+        cell.addEventListener("click", () => {
+          const row = cell.getAttribute("row");
+          const column = cell.getAttribute("column");
+          game.playRound(parseInt(row), parseInt(column));
+        });
+        gameBoard.appendChild(cell);
+      }
+    }
+  };
+
+  const addTokenToCell = (row, column, playerToken) => {
+    let cell = document.querySelector(`[row="${row}"][column="${column}"]`);
+    cell.textContent = playerToken;
+  };
+
+  return { renderGameBoard, addTokenToCell };
+}
+
+const game = GameController();
+
+// game.playRound(0, 0); // X
+// game.playRound(0, 0); // O
+// game.playRound(1, 1); // X
+// game.playRound(1, 2); // O
+// game.playRound(2, 2); // X
+
+const currentYearSpan = document.querySelector(".current_year");
+currentYearSpan.textContent = new Date().getFullYear();
