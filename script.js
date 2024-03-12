@@ -19,7 +19,7 @@ function Gameboard() {
   const getBoard = () => board;
 
   const setToken = (row, column, playerToken) => {
-    if (board[row][column].getToken() === " ") {
+    if (board[row][column].getToken() === "") {
       board[row][column].addToken(playerToken);
       gui.addTokenToCell(row, column, playerToken);
       return true;
@@ -39,7 +39,7 @@ function Gameboard() {
 }
 
 function Cell() {
-  let token = " ";
+  let token = "";
 
   const addToken = (playerToken) => (token = playerToken);
   const getToken = () => token;
@@ -84,14 +84,14 @@ function GameController(playerOne = "X", playerTwo = "O") {
       if (
         rawBoard[i][0] === rawBoard[i][1] &&
         rawBoard[i][1] === rawBoard[i][2] &&
-        rawBoard[i][0] !== " "
+        rawBoard[i][0] !== ""
       ) {
         let winner = rawBoard[i][0] == "X" ? "X" : "0";
         return winner;
       } else if (
         rawBoard[0][i] === rawBoard[1][i] &&
         rawBoard[1][i] === rawBoard[2][i] &&
-        rawBoard[0][i] !== " "
+        rawBoard[0][i] !== ""
       ) {
         let winner = rawBoard[0][i] == "X" ? "X" : "0";
         return winner;
@@ -101,45 +101,51 @@ function GameController(playerOne = "X", playerTwo = "O") {
     if (
       rawBoard[0][0] === rawBoard[1][1] &&
       rawBoard[1][1] === rawBoard[2][2] &&
-      rawBoard[0][0] !== " "
+      rawBoard[0][0] !== ""
     ) {
       let winner = rawBoard[0][0] == "X" ? "X" : "0";
       return winner;
     } else if (
       rawBoard[0][2] === rawBoard[1][1] &&
       rawBoard[1][1] === rawBoard[2][0] &&
-      rawBoard[0][2] !== " "
+      rawBoard[0][2] !== ""
     ) {
       let winner = rawBoard[0][2] == "X" ? "X" : "0";
       return winner;
       //If not win check if theres a tie
-    } else if (rawBoard.every((row) => row.every((cell) => cell != " "))) {
+    } else if (rawBoard.every((row) => row.every((cell) => cell !== ""))) {
       return "tie";
     }
   };
 
   const playRound = (row, column) => {
-    const cellClaimed = board.getBoard()[row][column].getToken() != " ";
-    if (!cellClaimed) {
+    const cellClaimed = board.getBoard()[row][column].getToken() !== "";
+    if (cellClaimed) {
+      console.log("This cell is claimed");
+      return;
+    } else {
       console.log(`Player ${getActivePlayer().name} marked ${row} ${column}`);
       board.setToken(row, column, getActivePlayer().token);
       let winner = winnerCheck();
       if (winner) {
         console.log("winner", `player ${winner}`);
         console.log(board.printBoard());
+        gui.showResultWindow(winner);
         restartGame();
+        return;
       } else {
         switchPlayerTurn();
         printNewRound();
       }
-    } else {
-      console.log("This cell is claimed");
     }
   };
 
   const restartGame = () => {
     board.setBoard();
     activePlayer = players[0];
+    document
+      .querySelectorAll(".cell")
+      .forEach((cell) => (cell.textContent = ""));
   };
 
   gui.renderGameBoard();
@@ -149,6 +155,8 @@ function GameController(playerOne = "X", playerTwo = "O") {
 
 function screenController() {
   const gameBoard = document.querySelector(".gameBoard");
+  const resultWindow = document.querySelector(".resultWindow");
+  const resultMessage = document.querySelector(".resultMessage");
 
   const renderGameBoard = () => {
     const board = Gameboard();
@@ -177,7 +185,19 @@ function screenController() {
     cell.textContent = playerToken;
   };
 
-  return { renderGameBoard, addTokenToCell };
+  const showResultWindow = (winner) => {
+    resultWindow.classList.remove("hidden");
+    if (winner === "tie") {
+      resultMessage.textContent = `Round result is TIE`;
+    } else {
+      resultMessage.textContent = `Player ${winner} win!`;
+    }
+    resultWindow.addEventListener("click", () =>
+      resultWindow.classList.add("hidden")
+    );
+  };
+
+  return { renderGameBoard, addTokenToCell, showResultWindow };
 }
 
 const game = GameController();
@@ -188,5 +208,6 @@ const game = GameController();
 // game.playRound(1, 2); // O
 // game.playRound(2, 2); // X
 
+// Current year for footer
 const currentYearSpan = document.querySelector(".current_year");
 currentYearSpan.textContent = new Date().getFullYear();
