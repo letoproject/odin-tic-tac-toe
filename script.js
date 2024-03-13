@@ -18,6 +18,10 @@ function Gameboard() {
 
   const getBoard = () => board;
 
+  const getCell = (index) => {
+    return board[index];
+  };
+
   const setToken = (row, column, playerToken) => {
     if (board[row][column].getToken() === "") {
       board[row][column].addToken(playerToken);
@@ -35,7 +39,7 @@ function Gameboard() {
     return boardWithCellValues;
   };
 
-  return { getBoard, printBoard, setToken, setBoard };
+  return { getBoard, printBoard, setToken, setBoard, getCell };
 }
 
 function Cell() {
@@ -131,7 +135,6 @@ function GameController(playerOne = "X", playerTwo = "O") {
         console.log("winner", `player ${winner}`);
         console.log(board.printBoard());
         gui.showResultWindow(winner);
-        restartGame();
         return;
       } else {
         switchPlayerTurn();
@@ -143,9 +146,10 @@ function GameController(playerOne = "X", playerTwo = "O") {
   const restartGame = () => {
     board.setBoard();
     activePlayer = players[0];
-    document
-      .querySelectorAll(".cell")
-      .forEach((cell) => (cell.textContent = ""));
+    document.querySelectorAll(".cell").forEach((cell) => {
+      cell.textContent = "";
+      cell.setAttribute("token", "");
+    });
   };
 
   gui.renderGameBoard();
@@ -154,7 +158,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
 }
 
 function screenController() {
-  const gameBoard = document.querySelector(".gameBoard");
+  const gameBoard = document.querySelector(".main__gameBoard");
   const resultWindow = document.querySelector(".resultWindow");
   const resultMessage = document.querySelector(".resultMessage");
 
@@ -182,7 +186,7 @@ function screenController() {
 
   const addTokenToCell = (row, column, playerToken) => {
     let cell = document.querySelector(`[row="${row}"][column="${column}"]`);
-    cell.textContent = playerToken;
+    cell.setAttribute("token", playerToken);
   };
 
   const showResultWindow = (winner) => {
@@ -192,9 +196,15 @@ function screenController() {
     } else {
       resultMessage.textContent = `Player ${winner} win!`;
     }
-    resultWindow.addEventListener("click", () =>
-      resultWindow.classList.add("hidden")
-    );
+    resultWindow.addEventListener("click", () => {
+      game.restartGame();
+      resultWindow.classList.add("hidden");
+    });
+  };
+
+  const setWinComboBgc = (board) => {
+    let winArray = [];
+    board.forEach((el) => winArray.push());
   };
 
   return { renderGameBoard, addTokenToCell, showResultWindow };
