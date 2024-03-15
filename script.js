@@ -12,6 +12,9 @@ function Gameboard() {
         board[i].push(Cell());
       }
     }
+    document.querySelectorAll(".cell").forEach((cell) => {
+      cell.setAttribute("turn", "X");
+    });
   };
 
   setBoard();
@@ -31,10 +34,13 @@ function Gameboard() {
     return false;
   };
 
-  const printBoard = () => {
+  const printBoard = (playerToken) => {
     const boardWithCellValues = board.map((row) =>
       row.map((cell) => cell.getToken())
     );
+    document.querySelectorAll(".cell").forEach((cell) => {
+      cell.setAttribute("turn", playerToken);
+    });
     // console.log(boardWithCellValues);
     return boardWithCellValues;
   };
@@ -70,13 +76,14 @@ function GameController(playerOne = "X", playerTwo = "O") {
 
   const switchPlayerTurn = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
+    gui.showCurrentPlayer(activePlayer.token);
   };
 
   const getActivePlayer = () => activePlayer;
+  gui.showCurrentPlayer(activePlayer);
 
   const printNewRound = () => {
-    board.printBoard();
-    console.log(`${getActivePlayer().name}'s turn`);
+    board.printBoard(activePlayer.token);
   };
 
   const winnerCheck = () => {
@@ -128,13 +135,11 @@ function GameController(playerOne = "X", playerTwo = "O") {
       console.log("This cell is claimed");
       return;
     } else {
-      console.log(`Player ${getActivePlayer().name} marked ${row} ${column}`);
       board.setToken(row, column, getActivePlayer().token);
       let winner = winnerCheck();
       if (winner) {
-        console.log("winner", `player ${winner}`);
-        console.log(board.printBoard());
         gui.showResultWindow(winner);
+        gui.updateScore(winner);
         return;
       } else {
         switchPlayerTurn();
@@ -146,6 +151,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
   const restartGame = () => {
     board.setBoard();
     activePlayer = players[0];
+    gui.showCurrentPlayer(activePlayer.token);
     document.querySelectorAll(".cell").forEach((cell) => {
       cell.textContent = "";
       cell.setAttribute("token", "");
@@ -153,6 +159,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
   };
 
   gui.renderGameBoard();
+  gui.showCurrentPlayer(activePlayer.token);
 
   return { playRound, getActivePlayer, winnerCheck, restartGame };
 }
@@ -161,6 +168,14 @@ function screenController() {
   const gameBoard = document.querySelector(".main__gameBoard");
   const resultWindow = document.querySelector(".resultWindow");
   const resultMessage = document.querySelector(".resultMessage");
+  const displayCurrentTurn = document.querySelector(
+    ".main__player-turn-display"
+  );
+  const scoreDisplayElements = document.querySelectorAll(
+    ".main__scoreInfo-score"
+  );
+
+  scoreDisplayElements.forEach((el) => (el.textContent = 0));
 
   const renderGameBoard = () => {
     const board = Gameboard();
@@ -172,6 +187,7 @@ function screenController() {
         let cell = document.createElement("div");
         cell.classList.add("cell");
         cell.textContent = " ";
+        cell.setAttribute("turn", "X");
         cell.setAttribute("row", i);
         cell.setAttribute("column", j);
         cell.addEventListener("click", () => {
@@ -189,6 +205,10 @@ function screenController() {
     cell.setAttribute("token", playerToken);
   };
 
+  const showCurrentPlayer = (currentPlayer) => {
+    displayCurrentTurn.textContent = `Now ${currentPlayer}'s turn`;
+  };
+
   const showResultWindow = (winner) => {
     resultWindow.classList.remove("hidden");
     if (winner === "tie") {
@@ -202,21 +222,31 @@ function screenController() {
     });
   };
 
+  const updateScore = (winner) => {
+    if (winner === "X") {
+      scoreDisplayElements[0].textContent += 1;
+    } else if (winner === "O") {
+      scoreDisplayElements[2].textContent += 1;
+    } else if (winner === "tie") {
+      scoreDisplayElements[1].textContent += 1;
+    }
+  };
+
   const setWinComboBgc = (board) => {
     let winArray = [];
     board.forEach((el) => winArray.push());
   };
 
-  return { renderGameBoard, addTokenToCell, showResultWindow };
+  return {
+    renderGameBoard,
+    addTokenToCell,
+    showResultWindow,
+    showCurrentPlayer,
+    updateScore,
+  };
 }
 
 const game = GameController();
-
-// game.playRound(0, 0); // X
-// game.playRound(0, 0); // O
-// game.playRound(1, 1); // X
-// game.playRound(1, 2); // O
-// game.playRound(2, 2); // X
 
 // Current year for footer
 const currentYearSpan = document.querySelector(".current_year");
