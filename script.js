@@ -1,8 +1,10 @@
-function Gameboard() {
-  const rows = 3;
-  const columns = 3;
-  const board = [];
+const ROWS = 3;
+const COLUMNS = 3;
 
+function Gameboard() {
+  const rows = ROWS;
+  const columns = COLUMNS;
+  const board = [];
   const gui = screenController();
 
   const setBoard = () => {
@@ -88,43 +90,36 @@ function GameController(playerOne = "X", playerTwo = "O") {
 
   const winnerCheck = () => {
     const rows = board.getBoard().length;
-    const columns = board.getBoard()[0].length;
-
     const rawBoard = board.printBoard();
+
     for (let i = 0; i < rows; i += 1) {
-      if (
-        rawBoard[i][0] === rawBoard[i][1] &&
-        rawBoard[i][1] === rawBoard[i][2] &&
-        rawBoard[i][0] !== ""
-      ) {
-        let winner = rawBoard[i][0] == "X" ? "X" : "0";
-        return winner;
-      } else if (
-        rawBoard[0][i] === rawBoard[1][i] &&
-        rawBoard[1][i] === rawBoard[2][i] &&
-        rawBoard[0][i] !== ""
-      ) {
-        let winner = rawBoard[0][i] == "X" ? "X" : "0";
-        return winner;
+      // Check rows
+      if (rawBoard[i].every((cell) => cell === rawBoard[i][0] && cell !== "")) {
+        return rawBoard[i][0];
+      }
+
+      // Check columns
+      if (rawBoard.every((row) => row[i] === rawBoard[0][i] && row[i] !== "")) {
+        return rawBoard[0][i];
       }
     }
-    //Check diagonals
-    if (
-      rawBoard[0][0] === rawBoard[1][1] &&
-      rawBoard[1][1] === rawBoard[2][2] &&
-      rawBoard[0][0] !== ""
-    ) {
-      let winner = rawBoard[0][0] == "X" ? "X" : "0";
-      return winner;
-    } else if (
-      rawBoard[0][2] === rawBoard[1][1] &&
-      rawBoard[1][1] === rawBoard[2][0] &&
-      rawBoard[0][2] !== ""
-    ) {
-      let winner = rawBoard[0][2] == "X" ? "X" : "0";
-      return winner;
-      //If not win check if theres a tie
-    } else if (rawBoard.every((row) => row.every((cell) => cell !== ""))) {
+
+    // Check diagonals
+    let diag1 = [];
+    let diag2 = [];
+    for (let i = 0; i < rows; i++) {
+      diag1.push(rawBoard[i][i]);
+      diag2.push(rawBoard[i][rows - i - 1]);
+    }
+    if (diag1.every((cell) => cell === diag1[0] && cell !== "")) {
+      return diag1[0];
+    }
+    if (diag2.every((cell) => cell === diag2[0] && cell !== "")) {
+      return diag2[0];
+    }
+
+    // If no winner, check if there's a tie
+    if (rawBoard.every((row) => row.every((cell) => cell !== ""))) {
       return "tie";
     }
   };
@@ -158,6 +153,7 @@ function GameController(playerOne = "X", playerTwo = "O") {
     });
   };
 
+  gui.updateScore();
   gui.renderGameBoard();
   gui.showCurrentPlayer(activePlayer.token);
 
@@ -168,6 +164,7 @@ function screenController() {
   const gameBoard = document.querySelector(".main__gameBoard");
   const resultWindow = document.querySelector(".resultWindow");
   const resultMessage = document.querySelector(".resultMessage");
+  const resetBtn = document.querySelector(".main__reset");
   const displayCurrentTurn = document.querySelector(
     ".main__player-turn-display"
   );
@@ -175,7 +172,12 @@ function screenController() {
     ".main__scoreInfo-score"
   );
 
-  scoreDisplayElements.forEach((el) => (el.textContent = 0));
+  gameBoard.style.setProperty("--rows", ROWS);
+  gameBoard.style.setProperty("--columns", COLUMNS);
+
+  let playerOneScore = 0,
+    playerTwoScore = 0,
+    tie = 0;
 
   const renderGameBoard = () => {
     const board = Gameboard();
@@ -206,13 +208,14 @@ function screenController() {
   };
 
   const showCurrentPlayer = (currentPlayer) => {
-    displayCurrentTurn.textContent = `Now ${currentPlayer}'s turn`;
+    displayCurrentTurn.setAttribute("token", currentPlayer);
+    // displayCurrentTurn.textContent = `${currentPlayer}'s turn`;
   };
 
   const showResultWindow = (winner) => {
     resultWindow.classList.remove("hidden");
     if (winner === "tie") {
-      resultMessage.textContent = `Round result is TIE`;
+      resultMessage.textContent = `It's TIE`;
     } else {
       resultMessage.textContent = `Player ${winner} win!`;
     }
@@ -223,19 +226,29 @@ function screenController() {
   };
 
   const updateScore = (winner) => {
-    if (winner === "X") {
-      scoreDisplayElements[0].textContent += 1;
-    } else if (winner === "O") {
-      scoreDisplayElements[2].textContent += 1;
-    } else if (winner === "tie") {
-      scoreDisplayElements[1].textContent += 1;
+    switch (winner) {
+      case "X":
+        scoreDisplayElements[0].textContent = playerOneScore += 1;
+        break;
+      case "O":
+        scoreDisplayElements[2].textContent = playerTwoScore += 1;
+        break;
+      case "tie":
+        scoreDisplayElements[1].textContent = tie += 1;
+        break;
+      default:
+        scoreDisplayElements.forEach((el) => (el.textContent = 0));
+        break;
     }
   };
 
-  const setWinComboBgc = (board) => {
-    let winArray = [];
-    board.forEach((el) => winArray.push());
-  };
+  resetBtn.addEventListener("click", () => {
+    game.restartGame();
+    playerOneScore = 0;
+    playerTwoScore = 0;
+    tie = 0;
+    updateScore();
+  });
 
   return {
     renderGameBoard,
